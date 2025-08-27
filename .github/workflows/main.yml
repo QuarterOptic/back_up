@@ -16,11 +16,11 @@ jobs:
 
       - name: Set up Git
         run: |
-          git config --global user.name "Your Name"
-          git config --global user.email "your-email@example.com"
+          git config --global user.name "QuarterOptic"
+          git config --global user.email "sztao2000@icloud.com"
 
       - name: Add upstream remote
-        run: git remote add upstream https://github.com/原作者用户名/原仓库名.git
+        run: git remote add upstream https://github.com/blackmatrix7/ios_rule_script.git
 
       - name: Fetch upstream
         run: git fetch upstream
