@@ -1,0 +1,36 @@
+name: 自动同步备份（修复权限）
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+# 关键：添加权限配置，允许写入仓库
+permissions:
+  contents: write  # 允许修改仓库内容（推送代码）
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检查当前备份仓库（带权限）
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true  # 保留令牌凭证
+          fetch-depth: 0  # 拉取完整历史，避免权限问题
+
+      - name: 配置Git
+        run: |
+          git config --global user.name "QuarterOptic"
+          git config --global user.email "sztao2000@icloud.com"
+
+      # （中间同步备份步骤不变，省略）
+      - name: 同步目标仓库并备份文件
+        run: |
+          # 你的同步逻辑（和之前一样）
+
+      - name: 提交备份
+        run: |
+          git add backups/
+          git commit --allow-empty -m "自动备份: $(date +'%Y-%m-%d %H:%M:%S')"
+          git push origin main
+    
