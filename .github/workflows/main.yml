@@ -16,7 +16,7 @@ jobs:
           # 使用默认令牌（适用于公共仓库）
           persist-credentials: true
           # 如果使用自定义令牌，请确保密钥存在
-          token: ${{ secrets.MY_GITHUB_TOKEN }}
+          #token: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Set up Git
         run: |
