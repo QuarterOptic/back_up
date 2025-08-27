@@ -1,36 +1,63 @@
-name: 自动同步备份（修复权限）
+name: 自动同步备份（强制生成文件）
 on:
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
-# 关键：添加权限配置，允许写入仓库
-permissions:
-  contents: write  # 允许修改仓库内容（推送代码）
-
 jobs:
   backup:
     runs-on: ubuntu-latest
     steps:
-      - name: 检查当前备份仓库（带权限）
+      - name: 检查当前备份仓库
         uses: actions/checkout@v4
         with:
-          persist-credentials: true  # 保留令牌凭证
-          fetch-depth: 0  # 拉取完整历史，避免权限问题
+          persist-credentials: true
 
       - name: 配置Git
         run: |
           git config --global user.name "QuarterOptic"
           git config --global user.email "sztao2000@icloud.com"
 
-      # （中间同步备份步骤不变，省略）
-      - name: 同步目标仓库并备份文件
+      - name: 同步目标仓库并强制生成备份
         run: |
-          # 你的同步逻辑（和之前一样）
+          REPOS=(
+            "https://github.com/blackmatrix7/ios_rule_script.git ios-rules rule/QuantumultX/Advertising/Advertising.list"
+          )
 
-      - name: 提交备份
+          for repo_info in "${REPOS[@]}"; do
+            REPO_URL=$(echo "$repo_info" | awk '{print $1}')
+            CLONE_DIR=$(echo "$repo_info" | awk '{print $2}')
+            TARGET_FILE=$(echo "$repo_info" | awk '{print $3}')
+            FILE_NAME=$(basename "$TARGET_FILE")
+            BACKUP_DIR="backups/$CLONE_DIR"
+            mkdir -p "$BACKUP_DIR"  # 确保备份目录存在
+            
+            # 克隆目标仓库
+            if [ -d "$CLONE_DIR/.git" ]; then
+              cd "$CLONE_DIR" && git pull origin main && cd ..
+            else
+              git clone --depth 1 "$REPO_URL" "$CLONE_DIR" || echo "克隆仓库失败，继续执行"
+            fi
+            
+            # 尝试复制目标文件，失败则创建空文件
+            LOCAL_TARGET="$CLONE_DIR/$TARGET_FILE"
+            if [ -f "$LOCAL_TARGET" ]; then
+              cp -f "$LOCAL_TARGET" "$BACKUP_DIR/$FILE_NAME"
+              echo "✅ 复制目标文件成功"
+            else
+              # 目标文件不存在时，创建空文件作为标记
+              touch "$BACKUP_DIR/$FILE_NAME"
+              echo "⚠️ 目标文件不存在，创建空文件标记"
+            fi
+            
+            # 清理克隆目录
+            rm -rf "$CLONE_DIR"
+          done
+
+      - name: 提交备份（确保提交）
         run: |
-          git add back_up/
+          git add backups/
+          # 即使只有空文件，也提交
           git commit --allow-empty -m "自动备份: $(date +'%Y-%m-%d %H:%M:%S')"
           git push origin main
     
