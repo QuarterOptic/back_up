@@ -30,7 +30,7 @@ jobs:
 
       - name: 提交备份
         run: |
-          git add backups/
+          git add back_ups/
           git commit --allow-empty -m "自动备份: $(date +'%Y-%m-%d %H:%M:%S')"
           git push origin main
     
